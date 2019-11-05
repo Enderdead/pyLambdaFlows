@@ -6,6 +6,7 @@ import boto3
 import json
 from S3manager import *
 from createRequest import createRequest
+from threading import Thread
 import progressbar
 BUCKET_NAME = "mean-stuff-123"
 
@@ -34,11 +35,14 @@ lambda_client = boto3.client('lambda',
 
 print("Send Json request and init computation !")
 for request in progressbar.progressbar(requestList):
-    lambda_client.invoke(
+
+    def lol():
+        lambda_client.invoke(
         FunctionName='LocalMean',
         InvocationType='Event',
-        Payload=json.dumps(request),
-    )
+        Payload=json.dumps(request),)
+    Thread(target=lol).start()
+   
 
 
 print("Computation got started ! ")
@@ -53,4 +57,4 @@ for i in progressbar.progressbar(range(31,35)):
         except Exception:
             pass
 print("Memory S3 dump")
-#from dumpMemory import *
+from dumpMemory import *
