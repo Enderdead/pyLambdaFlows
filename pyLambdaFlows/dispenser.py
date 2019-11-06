@@ -1,6 +1,9 @@
 
 
 class Dispenser():
+    """
+    This class will explain data dependancies over two layers
+    """
     def distribute(self, size):
         """
             Function computing the next layer dependancies.

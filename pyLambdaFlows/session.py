@@ -4,9 +4,13 @@ from botocore.exceptions import ClientError
 _DEFAULT_SESSION = None
 
 def set_default_session(session):
+    global _DEFAULT_SESSION
     _DEFAULT_SESSION = session
 
-def get_default_session(session):
+def get_default_session(check_if_none=False):
+    global _DEFAULT_SESSION
+    if _DEFAULT_SESSION is None and check_if_none:
+        raise RuntimeError("No default session provided, please use kward or set default session !")
     return _DEFAULT_SESSION
 
 
@@ -18,10 +22,10 @@ class Session():
         self.clients = dict(IAM=None, Lambda=None, DynamoDb=None)
 
     def __enter__(self):
-        pass
+        set_default_session(self)
 
-    def __exit__(self):
-        pass
+    def __exit__(self, exception_type, exception_value, traceback):
+        set_default_session(None)
 
     def setCredential(self, aws_access_key_id=None, aws_secret_access_key=None):
         self.aws_access_key_id = aws_access_key_id
@@ -82,3 +86,10 @@ class Session():
     def clear(self):
         for key in self.clients.keys():
             self.clients[key] = None
+
+if __name__ == "__main__":
+    print(get_default_session())
+
+    with Session() as sess:
+        print(get_default_session())
+
