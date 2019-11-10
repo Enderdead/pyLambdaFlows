@@ -18,11 +18,12 @@ class Session():
     def __init__(self, region_name="eu-west-3", aws_access_key_id=None, aws_secret_access_key=None):
         self.region = region_name
         self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
         self.clients = dict(IAM=None, Lambda=None, DynamoDb=None)
 
     def __enter__(self):
         set_default_session(self)
+        return self
 
     def __exit__(self, exception_type, exception_value, traceback):
         set_default_session(None)
@@ -39,7 +40,6 @@ class Session():
                                     aws_access_key_id=self.aws_access_key_id,
                                     aws_secret_access_key=self.aws_secret_access_key,
                                     region_name=self.region)
-
             try:
                 newIamClient.get_account_summary()
             except ClientError:
