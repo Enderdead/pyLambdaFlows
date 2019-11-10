@@ -2,11 +2,14 @@ from .dispenser import *
 from .session import get_default_session, set_default_session, Session
 
 
-class Source():
-    pass
+class Source:
+    def __init__(self, data=None):
+        self.data = data
 
+    def setSource(self, data):
+        self.data = data
 
-class Operation():
+class Operation:
     def __init__(self, parent, funct, topologie, name=None):
         self.terminal = not isinstance(parent, Operation)
         self.parent = parent
@@ -29,6 +32,9 @@ class Operation():
         self._send(sess)
             
     def _send(self, sess):
+        """
+            send source code 
+        """
         if not self.terminal:
             self.parent._send(sess)
         
@@ -39,14 +45,26 @@ class Operation():
             print("{} : send {} to AWS !".format(self.name, self.funct))
 
     def eval(self, sess=None):
-        " Call this operation"
+        " Call this operation (generate the json data)"
 
         if sess is None:
             sess = get_default_session(check_if_none=True)
         else:
             if not isinstance(sess, Session):
                 raise RuntimeError("You must provide a Session object as sess kwarg.")
-        pass
+        
+        jsonData = dict()
+        if not self.terminal:
+            self.parent._generate(jsonData)
+
+    def _generate(self, jsonData):
+        if self.terminal:
+            
+            for idx, element in enumerate(self.parent):
+                
+                jsonData[str(idx)] = 
+        else:
+            pass
 
 class Map(Operation):
     def __init__(self, parent, funct, name=None):
