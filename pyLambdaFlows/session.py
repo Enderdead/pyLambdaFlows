@@ -1,4 +1,4 @@
-from boto3 import client
+from boto3 import client, resource
 from botocore.exceptions import ClientError
 
 _DEFAULT_SESSION = None
@@ -19,7 +19,7 @@ class Session():
         self.region = region_name
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
-        self.clients = dict(IAM=None, Lambda=None, DynamoDb=None)
+        self.clients = dict(IAM=None, Lambda=None, DynamoDb=None, S3=None, Bucket=None)
 
     def __enter__(self):
         set_default_session(self)
@@ -65,6 +65,27 @@ class Session():
             self.clients["Lambda"] = newLambdaClient
         return self.clients["Lambda"]
 
+    def getS3(self):
+        if( self.aws_access_key_id is None or self.aws_secret_access_key is None):
+            raise RuntimeError("Credentials must be provided !")
+        if self.clients.get("S3", None) is None:
+            newS3Client = client('s3',
+                                    aws_access_key_id=self.aws_access_key_id,
+                                    aws_secret_access_key=self.aws_secret_access_key,
+                                    region_name=self.region)
+            self.clients["S3"] = newS3Client
+        return self.clients["S3"]
+
+    def getBucket(self):
+        if( self.aws_access_key_id is None or self.aws_secret_access_key is None):
+            raise RuntimeError("Credentials must be provided !")
+        if self.clients.get("Bucket", None) is None:
+            newS3Client = resource('s3',
+                                    aws_access_key_id=self.aws_access_key_id,
+                                    aws_secret_access_key=self.aws_secret_access_key,
+                                    region_name=self.region)
+            self.clients["Bucket"] = newS3Client
+        return self.clients["Bucket"]
 
     def getDynamoDb(self):
         if( self.aws_access_key_id is None or self.aws_secret_access_key is None):

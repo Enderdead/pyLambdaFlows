@@ -2,28 +2,32 @@ from .dispenser import *
 from .session import get_default_session, set_default_session, Session
 from .utils import *
 from .upload import Uploader
-
+from .S3Gesture import *
+import os 
+import progressbar
+import json
+from threading import Thread
+import pickle
 class pyLambdaElement:
-    def _send(self, sess):
+    def _send(self, uploader, purge=False):
         raise NotImplementedError()
 
     def _generate(self, tree, feed_dict=None):
         raise NotImplementedError()
 
-
-
 class Source(pyLambdaElement):
     def __init__(self):
-        pass
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.func_path = os.path.join(os.path.join(dir_path, "external"),"source.py")
 
-    def _send(self, sess):
-        pass
+    def _send(self, uploader, purge=False):
+        self.aws_lambda_name = uploader.upload_lambda(self.func_path, purge=purge)
+
 
     def _generate(self, tree, feed_dict=None):
         if feed_dict is None or feed_dict.get(self, None) is None:
             raise RuntimeError("Missing feed_dict values")
-
-        tree.putRoot(None, feed_dict[self])
+        tree.putRoot(self.aws_lambda_name, feed_dict[self])
 
 
 
@@ -35,13 +39,14 @@ class Operation(pyLambdaElement):
         self.parent = parent
         self.funct = funct
 
+        self.aws_lambda_name = None
         if(not isinstance(topologie, Dispenser)):
             raise AttributeError("You must provide  a Dispenser inherited class as a topologie arg")
         
         self.dispenser = topologie
         self.name = name
 
-    def compile(self, sess=None):
+    def compile(self, sess=None, purge=False):
         " This function send this lambda op in AWS service"
         if sess is None:
             sess = get_default_session(check_if_none=True)
@@ -49,20 +54,27 @@ class Operation(pyLambdaElement):
             if not isinstance(sess, Session):
                 raise RuntimeError("You must provide a Session object as sess kwarg.")
         
-        self._send(sess)
+        # Upload functions
+        upload = Uploader(sess)
+        self._send(upload, purge=purge)
+
+
+
             
-    def _send(self, sess):
+    def _send(self, uploader, purge=False):
         """
             send source code 
         """
 
-        self.parent._send(sess)
+        self.parent._send(uploader, purge=purge)
         
         #TODO send to AWS using sess
         if self.name is None:
             print("send {} to AWS !".format(self.funct))
         else: 
             print("{} : send {} to AWS !".format(self.name, self.funct))
+
+        self.aws_lambda_name = uploader.upload_lambda(self.funct, purge=purge)
 
     def eval(self, feed_dict=None, sess=None):
         " Call this operation (generate the json data)"
@@ -76,24 +88,45 @@ class Operation(pyLambdaElement):
         tree = Tree()
         self._generate(tree, feed_dict=feed_dict)
 
+        # Create bucket
+        create_bucket("pylambdaflows", tree.max_idx, sess)
+
         # Create input json
-        input_json = tree.generateJson()
+        input_json = tree.generateJson(bucket_name="pylambdaflows")
 
-        # Get all lamnda to create
-        functions_list = tree.getfunctList()
+        # Launch 
+        lambda_client = sess.getLambda()
+        S3Client = sess.getS3()
+        for idx, request in progressbar.progressbar(input_json.items()):
 
-        # TODO hash to not recreate function
+            def lol():
+                lambda_client.invoke(
+                    FunctionName=request["func"],
+                    InvocationType='Event',
+                    Payload=json.dumps(request),
+                )
+            Thread(target=lol).start()
 
-        # Upload functions
-        upload = Uploader(sess)
-        for function in functions_list :
-            upload.upload_lambda(function)
-
-
+        print("Computation got started ! ")
+        res = None
+        for i in progressbar.progressbar(range(0,tree.max_idx)):
+            if i!=(tree.max_idx-1):
+                print("lol")
+                continue
+            receive= False
+            while not receive:
+                try:
+                    res = pickle.loads(S3Client.get_object(Bucket="pylambdaflows", Key=str(i))["Body"].next())
+                    receive = True
+                except Exception:
+                    pass
+        removeBucket("pylambdaflows", sess)
+        
+        return res
 
     def _generate(self, tree, feed_dict=None):
         self.parent._generate(tree, feed_dict=feed_dict)
-        tree.addLayer(self.funct, self.dispenser, name=self.name)
+        tree.addLayer(self.aws_lambda_name, self.dispenser, name=self.name)
             
 
 class Map(Operation):

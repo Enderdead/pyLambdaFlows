@@ -4,11 +4,12 @@ class Tree():
     def __init__(self):
         self.depth = 0 
         self.layers = list()
+        self.max_idx = 0
 
     def putRoot(self, funct, data):
         root = list()
         for idx, element in enumerate(data):
-            root.append(InstanceNode(None, element, idx, parents=None))
+            root.append(InstanceNode(funct, element, idx, parents=None))
         self.layers.append(root)
         self.depth +=1
 
@@ -22,6 +23,7 @@ class Tree():
                 parents.append(self.layers[-1][dep])
             layer.append(InstanceNode(funct, None, idx+last_idx, parents=parents))
         self.layers.append(layer)
+        self.max_idx = last_idx + len(layer)
         self.depth +=1
 
     def getfunctList(self):
@@ -32,23 +34,27 @@ class Tree():
         return list(result)
 
 
-    def generateJson(self):
+    def generateJson(self, bucket_name="None"):
         jsonData = dict()
         curr_depth = len(self.layers)-1
         while curr_depth!=-1:
-            print("lol")
             for element in self.layers[curr_depth]:
                 curr_json = dict()
                 curr_json["idx"] = str(element.idx)
                 curr_json["func"] = element.funct
                 curr_json["children"] = element.childreJson
                 curr_json["data"] = list()
+                curr_json["bucket"] = bucket_name
 
                 if not element.parents is None:
                     curr_json["source"] = "data"
+                    # TODO remove this later with dynamo db
+                    first_one=True
                     for parent in element.parents:
                         curr_json["data"].append(str(parent.idx))
-                        parent.add_children_data(element.idx, curr_json)
+                        if first_one:
+                            parent.add_children_data(str(element.idx), curr_json)
+                            first_one = False
 
                 else:
                     curr_json["source"] = "direct"
