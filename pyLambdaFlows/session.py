@@ -1,6 +1,6 @@
 from boto3 import client, resource
 from botocore.exceptions import ClientError
-
+from pandas import read_csv
 _DEFAULT_SESSION = None
 
 def set_default_session(session):
@@ -15,10 +15,15 @@ def get_default_session(check_if_none=False):
 
 
 class Session():
-    def __init__(self, region_name="eu-west-3", aws_access_key_id=None, aws_secret_access_key=None):
+    def __init__(self, region_name="eu-west-3", aws_access_key_id=None, aws_secret_access_key=None, credentials_csv=None):
         self.region = region_name
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
+        if credentials_csv is None:
+            self.aws_access_key_id = aws_access_key_id
+            self.aws_secret_access_key = aws_secret_access_key
+        else:
+            csv_loaded = read_csv(credentials_csv)
+            self.aws_access_key_id = csv_loaded.iloc[0]["Access key ID"]
+            self.aws_secret_access_key = csv_loaded.iloc[0]["Secret access key"]
         self.clients = dict(IAM=None, Lambda=None, DynamoDb=None, S3=None, Bucket=None)
 
     def __enter__(self):
