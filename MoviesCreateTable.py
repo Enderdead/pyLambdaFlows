@@ -15,7 +15,7 @@ from __future__ import print_function # Python 2/3 compatibility
 import boto3
 
 
-dynamodb = boto3.resource('dynamodb', aws_access_key_id='AKIASDGDCUPMM6QF23DZ', aws_secret_access_key='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',
+dynamodb = boto3.resource('dynamodb', 
  region_name='eu-west-3')
 
 
