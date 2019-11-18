@@ -39,12 +39,11 @@ response = table.update_item(
         'year': year,
         'title': title
     },
-    UpdateExpression="set info.rating = info.rating + :val",
+    UpdateExpression="set info.rating = info.rating - :val",
     ExpressionAttributeValues={
         ':val': decimal.Decimal(1)
     },
     ReturnValues="UPDATED_NEW"
 )
-
-print("UpdateItem succeeded:")
-print(json.dumps(response, indent=4, cls=DecimalEncoder))
+a = response["Attributes"]["info"]["rating"]
+print(int(a))
