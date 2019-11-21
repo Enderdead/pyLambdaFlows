@@ -4,4 +4,5 @@ from .op import *
 from .session import *
 from .utils import *
 from .upload import *
+from .DynamoGesture import *
 from .version import __version__
