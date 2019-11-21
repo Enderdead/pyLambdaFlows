@@ -24,7 +24,7 @@ class Session():
             csv_loaded = read_csv(credentials_csv)
             self.aws_access_key_id = csv_loaded.iloc[0]["Access key ID"]
             self.aws_secret_access_key = csv_loaded.iloc[0]["Secret access key"]
-        self.clients = dict(IAM=None, Lambda=None, DynamoDb=None, S3=None, Bucket=None)
+        self.clients = dict(IAM=None, Lambda=None, DynamoDb=None, DynamoDbRessource=None, S3=None, Bucket=None)
 
     def __enter__(self):
         set_default_session(self)
@@ -101,13 +101,31 @@ class Session():
                                     aws_secret_access_key=self.aws_secret_access_key,
                                     region_name=self.region)
             try:
-                newDynamoClient.list_functions()
+                newDynamoClient.list_tables()
             except ClientError:
                 raise RuntimeError("Your credential isn't valid")
 
             self.clients["DynamoDb"] = newDynamoClient
         return self.clients["DynamoDb"]
 
+    def getDynamoDbRessource(self):
+        if( self.aws_access_key_id is None or self.aws_secret_access_key is None):
+            raise RuntimeError("Credentials must be provided !")
+        if self.clients.get("DynamoDbRessource", None) is None:
+            newDynamoClient = resource('dynamodb',
+                                    aws_access_key_id=self.aws_access_key_id,
+                                    aws_secret_access_key=self.aws_secret_access_key,
+                                    region_name=self.region)
+            try:
+                pass
+                #newDynamoClient.list_tables()
+            except ClientError:
+                raise RuntimeError("Your credential isn't valid")
+
+            self.clients["DynamoDbRessource"] = newDynamoClient
+        return self.clients["DynamoDbRessource"]
+
+        
 
     def clear(self):
         for key in self.clients.keys():
