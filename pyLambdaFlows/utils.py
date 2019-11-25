@@ -48,13 +48,9 @@ class Tree():
 
                 if not element.parents is None:
                     curr_json["source"] = "data"
-                    # TODO remove this later with dynamo db
-                    first_one=True
                     for parent in element.parents:
                         curr_json["data"].append(str(parent.idx))
-                        if first_one:
-                            parent.add_children_data(str(element.idx), curr_json)
-                            first_one = False
+                        parent.add_children_data(str(element.idx), curr_json)
 
                 else:
                     curr_json["source"] = "direct"
@@ -66,7 +62,12 @@ class Tree():
             curr_depth -= 1
         return jsonData
 
-
+    def gen_counter_values(self):
+        result = list()
+        for layer in self.layers:
+            for element in layer:
+                result.append( 0 if element.parents is None else len(element.parents))
+        return result
 
 
 class InstanceNode():

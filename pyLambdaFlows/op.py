@@ -5,6 +5,7 @@ from .upload import Uploader
 from .S3Gesture import *
 import os 
 import progressbar
+from .DynamoGesture import *
 import json
 from threading import Thread
 import pickle
@@ -91,9 +92,13 @@ class Operation(pyLambdaElement):
         # Create bucket
         create_bucket("pylambdaflows", tree.max_idx, sess)
 
+        # Create dynamobd
+        if not table_exists("pyLambda",sess):
+            create_table("pyLambda",sess)
+        fill_table("pyLambda", tree.gen_counter_values(), sess)
+
         # Create input json
         input_json = tree.generateJson(bucket_name="pylambdaflows")
-
         # Launch 
         lambda_client = sess.getLambda()
         S3Client = sess.getS3()

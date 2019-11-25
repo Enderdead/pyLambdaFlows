@@ -3,6 +3,8 @@ import pickle
 from time import sleep
 import boto3 
 from statistics import mean
+import decimal
+
 
 def lambda_handler(event, context):
     ######################################################################################""
@@ -13,7 +15,8 @@ def lambda_handler(event, context):
     data = event["data"]
     children = event["children"]
     bucket = event["bucket"]
-    
+    dynamodb_table = "pyLambda"
+
     inputData = list()
     if(source=='direct'):
         inputData = [int(element) for element in data]
@@ -25,7 +28,6 @@ def lambda_handler(event, context):
                 try:
                     batchResult = pickle.loads(S3Client.get_object(Bucket=bucket, Key=idx_loc)["Body"].next())
                 except:
-                    sleep(0.2)
                     continue
             inputData.append(batchResult)
     ######################################################################################""
@@ -44,14 +46,28 @@ def lambda_handler(event, context):
     # Treatment
     if(len(children.keys()) != 0):
         for _, item in children.items():
-            lambda_client = boto3.client('lambda')
 
-            lambda_client.invoke(
-            FunctionName=item['func'],
-            InvocationType='Event',
-            Payload=json.dumps(item),
-            )
-  
+            client = boto3.resource("dynamodb")
+            table = client.Table(dynamodb_table)
+            response = table.update_item(Key={
+                'id' : int(item["idx"])
+            },
+            UpdateExpression="set remaining = remaining - :val",
+            ExpressionAttributeValues={
+                ':val' : decimal.Decimal(1)
+            },
+            ReturnValues="UPDATED_NEW")
+            child_remaining_it = int(response["Attributes"]["remaining"])
+
+            if child_remaining_it == 0:
+                lambda_client = boto3.client('lambda')
+
+                lambda_client.invoke(
+                FunctionName=item['func'],
+                InvocationType='Event',
+                Payload=json.dumps(item),
+                )
+    
     ######################################################################################""
 
 
