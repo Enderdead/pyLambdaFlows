@@ -1,6 +1,7 @@
 import botocore 
 from .session import get_default_session
-
+import boto3
+import decimal
 
 def reset_table(table_name, sess=None):
     if sess is None:
@@ -39,6 +40,24 @@ def delete_table(table_name, sess=None):
             break
 
 
+def decremente(table_name, idx, offset=1, sess=None):
+    if sess is None:
+        sess = get_default_session()
+    
+
+    client = sess.getDynamoDbRessource()
+    table = client.Table(table_name)
+    response = table.update_item(Key={
+        'id' : idx
+    },
+    UpdateExpression="set remaining = remaining - :val",
+    ExpressionAttributeValues={
+        ':val' : decimal.Decimal(offset)
+    },
+    ReturnValues="UPDATED_NEW")
+    return int(response["Attributes"]["remaining"])
+
+
 
 def create_table(table_name, sess=None):
     if sess is None:
@@ -52,19 +71,10 @@ def create_table(table_name, sess=None):
         KeySchema=[ {
                     "AttributeName" : "id",
                     "KeyType" : "HASH"
-                },
-                {
-                    "AttributeName" : "counter", 
-                    "KeyType" : "RANGE"
-
                 }],
         AttributeDefinitions=[
             {
                 "AttributeName" : "id",
-                "AttributeType" : "N"
-            }, 
-            {
-                "AttributeName" : "counter",
                 "AttributeType" : "N"
             }],
         ProvisionedThroughput={
@@ -82,6 +92,6 @@ def fill_table(table_name, counter_init, sess=None):
     for idx, init_val in enumerate(counter_init):
         client.put_item(TableName=table_name, Item={
             "id" : {"N" : str(idx)},
-            "counter" : { "N" : str(init_val)}
+            "remaining" : { "N" : str(init_val)}
         })
     return
