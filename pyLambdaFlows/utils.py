@@ -66,6 +66,54 @@ class Tree():
             curr_depth -= 1
         return jsonData
 
+def decorate(func):
+#Le wrapper permet d'acceder aux arguments de la function decore
+    def wrapper(event, context):
+        a = list(args)
+        #pre traitement
+        # Get all event data
+        idx   = event["idx"]
+        source = event["source"]
+        data = event["data"]
+        children = event["children"]
+        bucket = event["bucket"]
+        
+        inputData = list()
+        if(source=='direct'):
+            inputData = [int(element) for element in data]
+        if(source=='data'):
+            S3Client = boto3.client('s3')
+            for idx_loc in data:
+                batchResult = None
+                while batchResult is None:
+                    try:
+                        batchResult = pickle.loads(S3Client.get_object(Bucket=bucket, Key=idx_loc)["Body"].next())
+                    except:
+                        sleep(0.2)
+                        continue
+                inputData.append(batchResult)     
+        #execution du code
+        reponse = func(inputData)
+        #post traitement
+        # Store
+        S3Client = boto3.client('s3')
+        S3Client.put_object(Body = pickle.dumps(inputData), Bucket=bucket, Key=idx)
+
+        # Treatment
+        if(len(children.keys()) != 0):
+            for _, item in children.items():
+                lambda_client = boto3.client('lambda')
+
+                lambda_client.invoke(
+                FunctionName=item['func'],
+                InvocationType='Event',
+                Payload=json.dumps(item),
+                )
+    return {
+        'statusCode': 200,
+        'body': json.dumps("Ok")
+        }   
+return decorate
 
 
 
