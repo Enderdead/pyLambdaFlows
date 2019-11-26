@@ -116,7 +116,6 @@ class Operation(pyLambdaElement):
         res = None
         for i in progressbar.progressbar(range(0,tree.max_idx)):
             if i!=(tree.max_idx-1):
-                print("lol")
                 continue
             receive= False
             while not receive:
