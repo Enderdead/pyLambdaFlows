@@ -25,6 +25,7 @@ class Session():
             self.aws_access_key_id = csv_loaded.iloc[0]["Access key ID"]
             self.aws_secret_access_key = csv_loaded.iloc[0]["Secret access key"]
         self.clients = dict(IAM=None, Lambda=None, DynamoDb=None, S3=None, Bucket=None)
+        self.to_purge = list()
 
     def __enter__(self):
         set_default_session(self)
@@ -32,6 +33,7 @@ class Session():
 
     def __exit__(self, exception_type, exception_value, traceback):
         set_default_session(None)
+        self._purge_all()
 
     def setCredential(self, aws_access_key_id=None, aws_secret_access_key=None):
         self.aws_access_key_id = aws_access_key_id
@@ -113,9 +115,20 @@ class Session():
         for key in self.clients.keys():
             self.clients[key] = None
 
+    def add_func_to_purge(self, element):
+        self.to_purge.append(element)
+
+    def _purge_all(self):
+        client = self.getLambda()
+        for element in self.to_purge:
+            print("Remove lambda {}".format(element))
+            client.delete_function(FunctionName=element)
+
 if __name__ == "__main__":
     print(get_default_session())
 
     with Session() as sess:
         print(get_default_session())
+
+
 

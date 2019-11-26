@@ -75,6 +75,9 @@ class Operation(pyLambdaElement):
             print("{} : send {} to AWS !".format(self.name, self.funct))
 
         self.aws_lambda_name = uploader.upload_lambda(self.funct, purge=purge)
+        if purge:
+            uploader.sess.add_func_to_purge(self.aws_lambda_name)
+
 
     def eval(self, feed_dict=None, sess=None):
         " Call this operation (generate the json data)"
@@ -111,7 +114,6 @@ class Operation(pyLambdaElement):
         res = None
         for i in progressbar.progressbar(range(0,tree.max_idx)):
             if i!=(tree.max_idx-1):
-                print("lol")
                 continue
             receive= False
             while not receive:
@@ -128,6 +130,7 @@ class Operation(pyLambdaElement):
         self.parent._generate(tree, feed_dict=feed_dict)
         tree.addLayer(self.aws_lambda_name, self.dispenser, name=self.name)
             
+
 
 class Map(Operation):
     def __init__(self, parent, funct, name=None):
