@@ -34,6 +34,9 @@ class Uploader:
         f = tempfile.TemporaryFile()
         with zipfile.ZipFile (f, "a") as zipObj:
             zipObj.write(funct_path, os.path.basename(funct_path) )
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            zipObj.write(os.path.join(dir_path, "external","decorator.py"), os.path.join("pyLambdaFlows","decorator.py"))
+
         f.seek(0)
 
         lambda_name = lambda_name + '-' + getHash(f)

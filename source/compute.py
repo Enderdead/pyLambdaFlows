@@ -2,13 +2,15 @@ import json
 import pickle
 from time import sleep
 import boto3 
+from pyLambdaFlows.decorator import kernel
 
-@decorate 
+
+@kernel 
 def lambda_handler(inputData):
-   try:
+    try:
         for i in range(len(inputData)):
             inputData[i][0] = inputData[i][0]*inputData[i][0]
     except:
         pass
     inputData = [ element[0] for element in inputData]
-return inputData
+    return inputData
