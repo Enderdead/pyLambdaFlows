@@ -79,8 +79,8 @@ def create_table(table_name, sess=None):
                 "AttributeType" : "N"
             }],
         ProvisionedThroughput={
-            'ReadCapacityUnits' : 100,
-            'WriteCapacityUnits' : 100
+            'ReadCapacityUnits' :  25,
+            'WriteCapacityUnits' : 25
         })
     table.wait_until_exists()
 
