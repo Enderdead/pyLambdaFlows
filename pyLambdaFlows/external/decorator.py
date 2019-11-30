@@ -2,6 +2,7 @@ import boto3
 import json
 from time import sleep
 import pickle
+import decimal
 
 def kernel(func):
 #Le wrapper permet d'acceder aux arguments de la function decore
@@ -13,8 +14,8 @@ def kernel(func):
         data = event["data"]
         children = event["children"]
         bucket = event["bucket"]
-        
-        inputData = list()
+        dynamodb_table = "pyLambda"
+
         if(source=='direct'):
             inputData = [int(element) for element in data]
         if(source=='data'):
@@ -25,9 +26,8 @@ def kernel(func):
                     try:
                         batchResult = pickle.loads(S3Client.get_object(Bucket=bucket, Key=idx_loc)["Body"].next())
                     except:
-                        sleep(0.2)
                         continue
-                inputData.append(batchResult)     
+                inputData.append(batchResult)   
         #execution du code
         reponse = func(inputData)
         #post traitement
@@ -37,16 +37,33 @@ def kernel(func):
 
         # Treatment
         if(len(children.keys()) != 0):
-            for _, item in children.items():
-                lambda_client = boto3.client('lambda')
 
-                lambda_client.invoke(
-                FunctionName=item['func'],
-                InvocationType='Event',
-                Payload=json.dumps(item),
-                )
+            for _, item in children.items():
+                # Decremente 
+
+                client = boto3.resource("dynamodb")
+                table = client.Table(dynamodb_table)
+                response = table.update_item(Key={
+                    'id' : int(item["idx"])
+                },
+                UpdateExpression="set remaining = remaining - :val",
+                ExpressionAttributeValues={
+                    ':val' : decimal.Decimal(1)
+                },
+                ReturnValues="UPDATED_NEW")
+                child_remaining_it = int(response["Attributes"]["remaining"])
+
+                # call
+                if child_remaining_it==0:
+                    lambda_client = boto3.client('lambda')
+                    lambda_client.invoke(
+                    FunctionName=item['func'],
+                    InvocationType='Event',
+                    Payload=json.dumps(item),
+                    )
+    
         return {
             'statusCode': 200,
             'body': json.dumps("Ok")
-            }   
+        }   
     return wrapper
