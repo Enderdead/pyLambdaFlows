@@ -1,3 +1,4 @@
+import pickle
 class Tree():
     def __init__(self):
         self.depth = 0 
@@ -7,7 +8,7 @@ class Tree():
     def putRoot(self, funct, data):
         root = list()
         for idx, element in enumerate(data):
-            root.append(InstanceNode(funct, element, idx, parents=None))
+            root.append(InstanceNode(funct, pickle.dumps(element).hex(), idx, parents=None))
         self.layers.append(root)
         self.depth +=1
 
@@ -52,7 +53,7 @@ class Tree():
 
                 else:
                     curr_json["source"] = "direct"
-                    curr_json["data"].append(str(element.args))
+                    curr_json["data"].append(element.args)
 
                 
                 if(curr_depth==0):
@@ -77,3 +78,4 @@ class InstanceNode():
 
     def add_children_data(self, idx, json):
         self.childreJson[idx] = json
+

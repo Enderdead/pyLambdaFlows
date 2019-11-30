@@ -41,7 +41,7 @@ def kernel(func):
         dynamoDbRessource = boto3.resource('dynamodb')
 
         if(source=='direct'):
-            inputData = [int(element) for element in data]
+            inputData = [pickle.loads(bytes(bytearray.fromhex(element))) for element in data]
         if(source=='data'):
             inputData = list()
             for idx_loc in data:
