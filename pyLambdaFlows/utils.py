@@ -1,5 +1,3 @@
-
-
 class Tree():
     def __init__(self):
         self.depth = 0 
@@ -65,7 +63,6 @@ class Tree():
                     jsonData[element.idx] = curr_json
             curr_depth -= 1
         return jsonData
-
 
 
 
