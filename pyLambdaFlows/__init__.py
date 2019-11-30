@@ -6,3 +6,4 @@ from .utils import *
 from .upload import *
 from .DynamoGesture import *
 from .version import __version__
+from .decorator import kernel

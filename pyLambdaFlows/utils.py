@@ -1,5 +1,3 @@
-
-
 class Tree():
     def __init__(self):
         self.depth = 0 
@@ -68,7 +66,6 @@ class Tree():
             for element in layer:
                 result.append( 0 if element.parents is None else len(element.parents))
         return result
-
 
 class InstanceNode():
     def __init__(self, funct, args, idx, parents=None):
