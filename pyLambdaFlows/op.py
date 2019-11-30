@@ -2,7 +2,6 @@ from .dispenser import *
 from .session import get_default_session, set_default_session, Session
 from .utils import *
 from .upload import Uploader
-from .S3Gesture import *
 import os 
 import progressbar
 from .DynamoGesture import *
@@ -93,7 +92,7 @@ class Operation(pyLambdaElement):
         self._generate(tree, feed_dict=feed_dict)
 
         # Create bucket
-        create_bucket("pylambdaflows", tree.max_idx, sess)
+        #create_bucket("pylambdaflows", tree.max_idx, sess)
 
         # Create dynamobd
         if not table_exists("pyLambda",sess):
@@ -102,9 +101,9 @@ class Operation(pyLambdaElement):
 
         # Create input json
         input_json = tree.generateJson(bucket_name="pylambdaflows")
+        #return input_json
         # Launch 
         lambda_client = sess.getLambda()
-        S3Client = sess.getS3()
         for idx, request in progressbar.progressbar(input_json.items()):
 
             def lol():
@@ -118,16 +117,11 @@ class Operation(pyLambdaElement):
         print("Computation got started ! ")
         res = None
         for i in progressbar.progressbar(range(0,tree.max_idx)):
-            if i!=(tree.max_idx-1):
-                continue
+
             receive= False
             while not receive:
-                try:
-                    res = pickle.loads(S3Client.get_object(Bucket="pylambdaflows", Key=str(i))["Body"].next())
-                    receive = True
-                except Exception:
-                    pass
-        removeBucket("pylambdaflows", sess)
+                res = get_data("pyLambda", i, sess=sess)
+                receive = not res is None
         
         return res
 

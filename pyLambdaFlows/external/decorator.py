@@ -4,6 +4,26 @@ from time import sleep
 import pickle
 import decimal
 
+
+def put_data(client, table_name, indexData, obj):
+    table = client.Table(table_name)
+    response = table.update_item(Key={
+        'id' : int(indexData)
+    },
+    UpdateExpression="set #data = :val",
+    ExpressionAttributeValues={
+        ':val' : pickle.dumps(obj)
+    },
+    ExpressionAttributeNames={
+    "#data": "data"
+    },
+    ReturnValues="UPDATED_NEW")
+
+
+def get_data(client, table_name, indexData):
+    return pickle.loads(client.get_item(TableName=table_name, Key= { "id" : {"N" : str(indexData)}})["Item"]["data"]["B"])
+
+
 def kernel(func):
 #Le wrapper permet d'acceder aux arguments de la function decore
     def wrapper(event, context):
@@ -16,24 +36,22 @@ def kernel(func):
         bucket = event["bucket"]
         dynamodb_table = "pyLambda"
 
+
+        dynamoDbClient = boto3.client('dynamodb')
+        dynamoDbRessource = boto3.resource('dynamodb')
+
         if(source=='direct'):
             inputData = [int(element) for element in data]
         if(source=='data'):
-            S3Client = boto3.client('s3')
+            inputData = list()
             for idx_loc in data:
-                batchResult = None
-                while batchResult is None:
-                    try:
-                        batchResult = pickle.loads(S3Client.get_object(Bucket=bucket, Key=idx_loc)["Body"].next())
-                    except:
-                        continue
+                batchResult = get_data(dynamoDbClient, dynamodb_table, idx_loc)
                 inputData.append(batchResult)   
         #execution du code
-        reponse = func(inputData)
+        result = func(inputData)
         #post traitement
         # Store
-        S3Client = boto3.client('s3')
-        S3Client.put_object(Body = pickle.dumps(reponse), Bucket=bucket, Key=idx)
+        put_data(dynamoDbRessource, dynamodb_table, idx, result)
 
         # Treatment
         if(len(children.keys()) != 0):

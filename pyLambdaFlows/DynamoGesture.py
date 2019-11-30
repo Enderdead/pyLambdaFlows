@@ -94,7 +94,7 @@ def fill_table(table_name, counter_init, sess=None):
         client.put_item(TableName=table_name, Item={
             "id" : {"N" : str(idx)},
             "remaining" : { "N" : str(init_val)},
-            "data" : { "B" : pickle.dumps(0) }
+            "data" : { "B" : pickle.dumps(None) }
         })
     return
 
