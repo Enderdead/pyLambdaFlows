@@ -33,7 +33,7 @@ class Tree():
         return list(result)
 
 
-    def generateJson(self, bucket_name="None"):
+    def generateJson(self, tableName="None"):
         jsonData = dict()
         curr_depth = len(self.layers)-1
         while curr_depth!=-1:
@@ -43,7 +43,7 @@ class Tree():
                 curr_json["func"] = element.funct
                 curr_json["children"] = element.childreJson
                 curr_json["data"] = list()
-                curr_json["bucket"] = bucket_name
+                curr_json["table"] = tableName
 
                 if not element.parents is None:
                     curr_json["source"] = "data"

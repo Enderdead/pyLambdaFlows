@@ -33,8 +33,7 @@ def kernel(func):
         source = event["source"]
         data = event["data"]
         children = event["children"]
-        bucket = event["bucket"]
-        dynamodb_table = "pyLambda"
+        dynamodb_table = event["table"]
 
 
         dynamoDbClient = boto3.client('dynamodb')

@@ -100,11 +100,11 @@ class Operation(pyLambdaElement):
         fill_table("pyLambda", tree.gen_counter_values(), sess)
 
         # Create input json
-        input_json = tree.generateJson(bucket_name="pylambdaflows")
+        input_json = tree.generateJson(tableName="pyLambda")
         #return input_json
         # Launch 
         lambda_client = sess.getLambda()
-        for idx, request in progressbar.progressbar(input_json.items()):
+        for _, request in progressbar.progressbar(input_json.items()):
 
             def lol():
                 lambda_client.invoke(
