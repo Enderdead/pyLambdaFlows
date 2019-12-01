@@ -12,5 +12,4 @@ from pyLambdaFlows.decorator import kernel
 @kernel
 def lambda_handler(inputData):
     result = mean(inputData)
-
     return result

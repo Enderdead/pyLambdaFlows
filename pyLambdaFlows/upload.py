@@ -30,7 +30,7 @@ class Uploader:
         
         lambda_name = os.path.basename(funct_path).split('.')[0]
 
-                
+        
         f = tempfile.TemporaryFile()
         with zipfile.ZipFile (f, "a") as zipObj:
             zipObj.write(funct_path, os.path.basename(funct_path) )

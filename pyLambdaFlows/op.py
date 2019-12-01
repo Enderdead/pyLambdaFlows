@@ -8,6 +8,8 @@ from .DynamoGesture import *
 import json
 from threading import Thread
 import pickle
+import traceback
+
 class pyLambdaElement:
     def _send(self, uploader, purge=False):
         raise NotImplementedError()
@@ -98,6 +100,7 @@ class Operation(pyLambdaElement):
         if not table_exists("pyLambda",sess):
             create_table("pyLambda",sess)
         fill_table("pyLambda", tree.gen_counter_values(), sess)
+        put_entry("pyLambda", -1, [], 0, sess)
 
         # Create input json
         input_json = tree.generateJson(tableName="pyLambda")
@@ -119,10 +122,27 @@ class Operation(pyLambdaElement):
         for i in progressbar.progressbar(range(0,tree.max_idx)):
 
             receive= False
-            while not receive:
+            error = False
+            err_list = list()
+            while not receive and not error:
                 res = get_data("pyLambda", i, sess=sess)
                 receive = not res is None
-        
+                _, remaining, err_list =  get_entry("pyLambda", -1, sess)
+                if remaining == 1:
+                    error = True
+
+            if error and len(err_list)>0:
+                idx, etype, value, tb = err_list[0]
+
+                output = ('{2}\n' +
+                      '\nThe above exception was first raised by a AWS lambda instance (number '+ str(idx) +'): \n\n' +
+                      'Distant traceback :\n' +
+                      '{0}' +
+                      '{1}: {2}''').format(''.join(traceback.format_list(tb)), etype.__name__, str(value))
+            
+                raise etype(output)
+                
+
         return res
 
     def _generate(self, tree, feed_dict=None):
