@@ -96,7 +96,25 @@ def fill_table(table_name, counter_init, sess=None):
             "remaining" : { "N" : str(init_val)},
             "data" : { "B" : pickle.dumps(None) }
         })
-    return
+
+def put_entry(table_name, idx, data, remaining, sess=None):
+    if sess is None:
+        sess = get_default_session()
+    client = sess.getDynamoDb()
+    client.put_item(TableName=table_name, Item={
+        "id" : {"N" : str(idx)},
+        "remaining" : { "N" : str(remaining)},
+        "data" : { "B" : pickle.dumps(data) }
+    })
+
+
+def get_entry(table_name, idx, sess=None):
+    if sess is None:
+        sess = get_default_session()
+    client = sess.getDynamoDb()
+    result = client.get_item(TableName=table_name, Key= { "id" : {"N" : str(idx)}})["Item"]
+    return int(result["id"]["N"]), int(result["remaining"]["N"]), pickle.loads(result["data"]["B"])
+
 
 def put_data(table_name, indexData, obj, sess=None):
 
