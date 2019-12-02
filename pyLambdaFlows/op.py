@@ -1,6 +1,7 @@
 from .dispenser import *
 from .session import get_default_session, set_default_session, Session
-from .utils import *
+from .tree import *
+from .utils import isIterable
 from .upload import Uploader
 import os 
 import progressbar
@@ -19,8 +20,10 @@ class pyLambdaElement:
 
 class Source(pyLambdaElement):
     def __init__(self):
+        self.parent = None
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.func_path = os.path.join(os.path.join(dir_path, "external"),"source.py")
+        self.funct = os.path.join(os.path.join(dir_path, "external"),"source.py")
 
     def _send(self, uploader, purge=False):
         self.aws_lambda_name = uploader.upload_lambda(self.func_path, purge=purge)
@@ -35,17 +38,30 @@ class Source(pyLambdaElement):
 
 class Operation(pyLambdaElement):
     def __init__(self, parent, funct, topologie, name=None):
-        if(not isinstance(parent, pyLambdaElement)):
-            raise AttributeError("You must provide  a pyLambdaElement inherited class as a parent")
+        if isIterable(parent):
+            if len(list(filter(lambda x : isinstance(x, pyLambdaElement), parent)))!=len(parent):
+                raise AttributeError("You must provide  a pyLambdaElement inherited class as a parent.")
+        else:
+            if (not isinstance(parent, pyLambdaElement)):
+                raise AttributeError("You must provide  a pyLambdaElement inherited class as a parent.")
 
-        self.parent = parent
+
+        if isIterable(topologie):
+            if len(list(filter(lambda x : isinstance(x, Dispenser), topologie)))!=len(topologie):
+                raise AttributeError("You must provide  a Dispenser inherited class as a topologie arg.")
+        else:
+            if (not isinstance(topologie, Dispenser)):
+                raise AttributeError("You must provide  a Dispenser inherited class as a topologie arg.")
+        
+        if isIterable(parent) and not isIterable(topologie):
+            topologie = (topologie,)*len(parent)
+
+
+        self.parent = parent if isIterable(parent) else [parent]
         self.funct = funct
 
         self.aws_lambda_name = None
-        if(not isinstance(topologie, Dispenser)):
-            raise AttributeError("You must provide  a Dispenser inherited class as a topologie arg")
-        
-        self.dispenser = topologie
+        self.dispenser = topologie if isIterable(topologie) else [topologie]
         self.name = name
 
     def compile(self, sess=None, purge=False):
@@ -67,8 +83,8 @@ class Operation(pyLambdaElement):
         """
             send source code 
         """
-
-        self.parent._send(uploader, purge=purge)
+        for par in self.parent:
+            par._send(uploader, purge=purge)#TODO error
         
         #TODO send to AWS using sess
         if self.name is None:
@@ -90,8 +106,10 @@ class Operation(pyLambdaElement):
             if not isinstance(sess, Session):
                 raise RuntimeError("You must provide a Session object as sess kwarg.")
         
-        tree = Tree()
-        self._generate(tree, feed_dict=feed_dict)
+        tree = Tree(self)
+        tree.compute(feed_dict)
+        
+        #self._generate(tree, feed_dict=feed_dict)
 
         # Create bucket
         #create_bucket("pylambdaflows", tree.max_idx, sess)
