@@ -1,0 +1,10 @@
+pandas
+numpy
+json
+pickle
+decimal
+botocore
+boto3
+random
+hashlib
+zipfile
