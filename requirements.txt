@@ -8,3 +8,4 @@ boto3
 random
 hashlib
 zipfile
+sphinx_rtd_theme
