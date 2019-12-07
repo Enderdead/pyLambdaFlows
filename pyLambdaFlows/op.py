@@ -108,11 +108,6 @@ class Operation(pyLambdaElement):
         
         tree = Tree(self)
         tree.compute(feed_dict)
-        
-        #self._generate(tree, feed_dict=feed_dict)
-
-        # Create bucket
-        #create_bucket("pylambdaflows", tree.max_idx, sess)
 
         # Create dynamobd
         if not table_exists("pyLambda",sess):
@@ -151,9 +146,8 @@ class Operation(pyLambdaElement):
 
             if error and len(err_list)>0:
                 idx, etype, value, tb = err_list[0]
-
                 output = ('{2}\n' +
-                      '\nThe above exception was first raised by a AWS lambda instance (number '+ str(idx) +'): \n\n' +
+                      '\nThe above exception was first raised by a AWS lambda instance (number '+ str(idx) +' linked  to op : '+str(tree.getNode(idx))+' ): \n' +
                       'Distant traceback :\n' +
                       '{0}' +
                       '{1}: {2}''').format(''.join(traceback.format_list(tb)), etype.__name__, str(value))
@@ -166,7 +160,9 @@ class Operation(pyLambdaElement):
     def _generate(self, tree, feed_dict=None):
         self.parent._generate(tree, feed_dict=feed_dict)
         tree.addLayer(self.aws_lambda_name, self.dispenser, name=self.name)
-            
+    
+    def __str__(self):
+        return "<{} op, funct: {}, name: {}>".format(self.__class__.__name__, self.funct, self.name)
 
 
 class Map(Operation):

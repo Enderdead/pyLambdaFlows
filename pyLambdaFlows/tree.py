@@ -43,13 +43,15 @@ class Tree():
         dependencies = list()
         for idx, parent in enumerate(node.parent):
             dependencies.append(node.dispenser[idx](len(self.treated[parent])))
-        
+
         if len(set(map(lambda x: len(x), dependencies)))>1:
             raise RuntimeError("Node get multiple parent with differents dim !")
 
         lambda_list = list()
         # If we have only one parent, we will have a 1dim data field
-        if(len(dependencies)==1):
+        if(len(dependencies)==0):
+            raise RuntimeError("Intern Eror")
+        elif(len(dependencies)==1):
             dependencies = dependencies[0]
             for dep in dependencies:
                 curr_parents = list()
@@ -59,7 +61,7 @@ class Tree():
                 self.curr_idx+=1
 
         # If we have mult-parent, we shall get a 2 dim data field
-        if(len(dependencies)>1):
+        else:
             for dep in zip(*dependencies):
                 curr_parents = list()
                 for i in range(len(dep)):
@@ -72,6 +74,11 @@ class Tree():
                 self.curr_idx+=1
         self.treated[node] = lambda_list
 
+    def getNode(self, idx):
+        for key, items in self.treated.items():
+            if len(list(filter(lambda x: x.idx==int(idx), items)))>0:
+                return key
+        return None
 
     def generateJson(self, tableName="None"):
         jsonData = dict()
