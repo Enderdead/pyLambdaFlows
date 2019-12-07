@@ -6,6 +6,7 @@ from pyLambdaFlows.decorator import kernel
 
 
 @kernel 
-def lambda_handler(inputData):
-
-    return inputData*inputData
+def lambda_handler(a, b):
+    
+    #inputData = [ element[0] for element in inputData]
+    return a+b

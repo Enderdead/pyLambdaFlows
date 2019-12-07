@@ -5,7 +5,12 @@ import pickle
 import decimal
 import sys
 import traceback
-
+def isIterable(obj):
+    try:
+        _ = iter(obj)
+    except TypeError:
+        return False
+    return True
 def put_data(client, table_name, indexData, obj):
     table = client.Table(table_name)
     response = table.update_item(Key={
@@ -50,17 +55,34 @@ def kernel(func):
 
         dynamoDbClient = boto3.client('dynamodb')
         dynamoDbRessource = boto3.resource('dynamodb')
-
+        multi_parent = False
         if(source=='direct'):
             inputData = [pickle.loads(bytes(bytearray.fromhex(element))) for element in data]
         if(source=='data'):
             inputData = list()
+            
             for idx_loc in data:
-                batchResult = get_data(dynamoDbClient, dynamodb_table, idx_loc)
-                inputData.append(batchResult)   
+                if not isinstance(idx_loc, str):
+                    multi_parent = True
+                    batchResult = list()
+                    for sub_idx in idx_loc:
+                        batchResult.append(get_data(dynamoDbClient, dynamodb_table, sub_idx))
+                    if len(batchResult)==1:
+                        batchResult = batchResult[0]
+                    inputData.append(batchResult)   
+                else:
+                    batchResult = get_data(dynamoDbClient, dynamodb_table, idx_loc)
+                    inputData.append(batchResult)   
         #execution du code
         try:
-            result = func(inputData)
+            if not multi_parent:
+                if len(inputData)==1:
+                    result = func(inputData[0])
+                else:
+                    result = func(inputData)
+            else:
+                result = func(*inputData)
+
         except Exception:
             etype, value, tb = sys.exc_info()
             error_list = get_entry(dynamoDbClient, dynamodb_table, -1)[-1]

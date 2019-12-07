@@ -1,18 +1,17 @@
 import pyLambdaFlows
-import boto3
-sess = pyLambdaFlows.Session(credentials_csv="./accessKeys.csv")
+from random import randint
 
+a = pyLambdaFlows.op.Source()
 
-#pyLambdaFlows.DynamoGesture.delete_table("pyLambda", sess=sess)
+b = pyLambdaFlows.op.Source()
 
-#pyLambdaFlows.DynamoGesture.create_table("pyLambda", sess=sess)
-#pyLambdaFlows.DynamoGesture.delete_table("pyLambda", sess=sess)
-print("fin")
-#pyLambdaFlows.DynamoGesture.delete_table("pyLambda", sess=sess)
+c = pyLambdaFlows.op.Map([a,b], "./source/addition.py")
 
-#pyLambdaFlows.DynamoGesture.fill_table("pyLambda", [1, 2, 3], sess=sess)
-res = pyLambdaFlows.DynamoGesture.decremente("pyLambda", 1, sess=sess)
-#a = boto3.resource("dynamodb", region_name=sess.region, aws_access_key_id=sess.aws_access_key_id, aws_secret_access_key= sess.aws_secret_access_key)
-#table = a.Table("pyLambda")
+d = pyLambdaFlows.op.Reduce(c, "./source/mean.py")
+json = None
 
-
+with pyLambdaFlows.Session(credentials_csv="./accessKeys.csv") as sess:
+    d.compile(purge=False)
+    result = d.eval(feed_dict={a:[1,2,1], b:[1,2,3]})
+    print(result)
+    

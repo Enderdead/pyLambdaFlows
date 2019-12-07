@@ -138,7 +138,7 @@ class Session():
 
     def _purge_all(self):
         client = self.getLambda()
-        for element in self.to_purge:
+        for element in set(self.to_purge):
             print("Remove lambda {}".format(element))
             client.delete_function(FunctionName=element)
 
