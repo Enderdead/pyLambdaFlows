@@ -3,3 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 accessKeys.csv
+build/
+dist/
+*.egg-info/
+.vscode/
