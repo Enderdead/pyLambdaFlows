@@ -9,4 +9,4 @@ from pyLambdaFlows.decorator import kernel
 def lambda_handler(a, b):
     
     #inputData = [ element[0] for element in inputData]
-    return a[0]+b[0]
+    return a+b

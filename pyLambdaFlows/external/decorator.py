@@ -76,7 +76,10 @@ def kernel(func):
         #execution du code
         try:
             if not multi_parent:
-                result = func(inputData)
+                if len(inputData)==1:
+                    result = func(inputData[0])
+                else:
+                    result = func(inputData)
             else:
                 result = func(*inputData)
 
