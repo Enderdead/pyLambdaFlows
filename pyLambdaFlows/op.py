@@ -27,6 +27,7 @@ class Source(pyLambdaElement):
 
     def _send(self, uploader, purge=False):
         self.aws_lambda_name = uploader.upload_lambda(self.func_path, purge=purge)
+        uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
 
     def _generate(self, tree, feed_dict=None):
@@ -84,17 +85,11 @@ class Operation(pyLambdaElement):
             send source code 
         """
         for par in self.parent:
-            par._send(uploader, purge=purge)#TODO error
+            par._send(uploader, purge=purge)
         
-        #TODO send to AWS using sess
-        if self.name is None:
-            print("send {} to AWS !".format(self.funct))
-        else: 
-            print("{} : send {} to AWS !".format(self.name, self.funct))
-
         self.aws_lambda_name = uploader.upload_lambda(self.funct, purge=purge)
-        if purge:
-            uploader.sess.add_func_to_purge(self.aws_lambda_name)
+
+        uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
 
     def eval(self, feed_dict=None, sess=None):
@@ -119,6 +114,7 @@ class Operation(pyLambdaElement):
         input_json = tree.generateJson(tableName="pyLambda")
         #return input_json
         # Launch 
+        print("Call AWS API")
         lambda_client = sess.getLambda()
         for _, request in progressbar.progressbar(input_json.items()):
 

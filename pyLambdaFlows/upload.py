@@ -5,7 +5,7 @@ import botocore
 import hashlib
 import warnings
 
-from .version import __version__
+from .version import __version__, __aws_python_version__
 
 def getHash(fil, nb_digits=5):
     fil.seek(0)
@@ -20,8 +20,12 @@ class Uploader:
         self.sess = sess
         iam_client = self.sess.getIAM()
         self.role = iam_client.get_role(RoleName='LambdaBasicExecution')
+        self.already_pushed = {}
 
     def upload_lambda(self, funct_path, purge=False):
+        if funct_path in self.already_pushed.keys():
+            return self.already_pushed[funct_path]
+        
         try:
             if os.path.basename(funct_path).split('.')[-1] != "py":
                 raise RuntimeError("Your funct path must be a .py file")
@@ -50,21 +54,23 @@ class Uploader:
         except lambda_client.exceptions.ResourceNotFoundException:
             pass
         
-        print(purge)
         if(alreadyExist):
             if(purge):
+                warnings.warn("Lambda Already on AWS dataBase ({}), removing...".format(lambda_name), RuntimeWarning)
                 lambda_client.delete_function(FunctionName=lambda_name)
             else:
-                warnings.warn("Lambda Already on AWS dataBase", RuntimeWarning)
+                warnings.warn("Lambda Already on AWS dataBase ({})".format(lambda_name), RuntimeWarning)
+                self.already_pushed[funct_path] = lambda_name
                 return lambda_name
 
-        print(lambda_name.split("-")[0]+".lambda_handler")
+        #TODO catch error
         lambda_client.create_function(
             FunctionName=lambda_name,
-            Runtime='python3.7',
+            Runtime=__aws_python_version__,
             Role=self.role['Role']['Arn'],
             Handler=lambda_name.split("-")[0]+".lambda_handler",
             Code=dict(ZipFile=f.read()),
             Timeout=300, # Maximum allowable timeout
             )
+        self.already_pushed[funct_path] = lambda_name
         return lambda_name
