@@ -17,9 +17,10 @@ class PromessResult():
     def getStatus(self):
         database_status = get_entries(self.table, min(self.result_idx), max(self.result_idx), sess=self.session)
 
-        remaining = len(list(filter(lambda  element: element[1] is None, database_status)))
-        done = len(database_status)- remaining
-        return remaining, done
+        remaining = list(filter(lambda  element: element[1] is None, database_status))
+        done = list(filter(lambda  element: not element[1] is None, database_status))
+        return [element[0] for element in remaining], [element[0] for element in done]
 
     def getResult(self):
-        pass
+        table_data =  get_entries(self.table, min(self.result_idx), max(self.result_idx), sess=self.session)
+        return [element[1] for element in table_data]

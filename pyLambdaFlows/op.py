@@ -36,9 +36,10 @@ class Source(pyLambdaElement):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.func_path = os.path.join(os.path.join(dir_path, "external"),"source.py")
         self.funct = os.path.join(os.path.join(dir_path, "external"),"source.py")
+        self.files = [self.funct,]
 
     def _send(self, uploader, purge=False):
-        self.aws_lambda_name = uploader.upload_lambda(self.func_path, purge=purge)
+        self.aws_lambda_name = uploader.upload_lambda(self, purge=purge)
         uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
 
@@ -71,8 +72,12 @@ class Operation(pyLambdaElement):
 
 
         self.parent = parent if isIterable(parent) else [parent]
-        self.funct = funct
-
+        if isinstance(funct, list) or isinstance(funct, tuple):
+            self.funct = funct[0]
+            self.files = funct
+        else:
+            self.funct = funct
+            self.files = [funct,]
         self.aws_lambda_name = None
         self.dispenser = topologie if isIterable(topologie) else [topologie]
         self.name = name
@@ -99,7 +104,7 @@ class Operation(pyLambdaElement):
         for par in self.parent:
             par._send(uploader, purge=purge)
         
-        self.aws_lambda_name = uploader.upload_lambda(self.funct, purge=purge)
+        self.aws_lambda_name = uploader.upload_lambda(self, purge=purge)
 
         uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
@@ -136,7 +141,6 @@ class Operation(pyLambdaElement):
                     Payload=json.dumps(request),
                 )
             Thread(target=lol).start()
-        return input_json
 
         if not wait:
             return PromessResult("pyLambda", tree.getResultIdx(), sess)

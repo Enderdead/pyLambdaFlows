@@ -3,105 +3,52 @@ import time
 import pyLambdaFlows
 import click
 import pandas as pd
+import pickle
+t1 = time.time()
+N = 100
+Workers = 100
+loops = 6
+loopcounts = [(6,N),]*Workers 
 
-from compute import compute_flops
-
-
-def benchmark(loopcount, workers, matn, verbose=False):
-    t1 = time.time()
-    N = workers
-
-    loopcounts = [(loopcount,N),]*N 
-
-    source = pyLambdaFlows.Source()
-    compute_op = pyLambdaFlows.Map(source, "./compute.py")
+source = pyLambdaFlows.Source()
+compute_op = pyLambdaFlows.Map(source, "./compute.py")
 
 
-    sess = pyLambdaFlows.Session(credentials_csv="./accessKeys.csv")
-    compute_op.compile(sess=sess, purge=True)
-    promess = compute_op.eval(feed_dict={source: loopcounts}, wait=False)
+sess = pyLambdaFlows.Session(credentials_csv="./accessKeys.csv")
+compute_op.compile(sess=sess, purge=False)
+start_time = time.time()
+promess = compute_op.eval(feed_dict={source: loopcounts}, wait=False, sess=sess)
 
+local_jobs_done_timeline = []
+result_count = 0
+old = -1
+while result_count < Workers:
+    _, result_idx = promess.getStatus()
+    result_count = len(result_idx)
+    print(result_count)
+    if old!=result_count:
+        local_jobs_done_timeline.append((time.time(), result_idx))
+        old = result_count
+    
+result = promess.getResult()
+data_dict = {"start_call" : [], "start_compute": [], "FLOPS": [], "end_compute": [], "end_call": []}
 
-    print("invocation done, dur=", time.time() - t1)
-
-    local_jobs_done_timeline = []
-    result_count = 0
-    while result_count < N:
-        result_count = promess.getStatus()
-
-        local_jobs_done_timeline.append((time.time(), result_count))
-        est_flop = 2 * result_count * loopcount * matn ** 3
-
-        est_gflops = est_flop / 1e9 / (time.time() - t1)
-        if verbose:
-            print("jobs done: {:5d}    runtime: {:5.1f}s   {:8.1f} GFLOPS ".format(result_count,
-                                                                                    time.time() - t1,
-                                                                                    est_gflops))
-
-        if result_count == N:
+for idx in promess.result_idx:
+    start_call = start_time
+    start_compute = result[promess.result_idx.index(idx)][1]
+    end_compute =  result[promess.result_idx.index(idx)][2]
+    flops = result[promess.result_idx.index(idx)][0]
+    end_call = start_call
+    for timestamp, received in local_jobs_done_timeline:
+        if idx in received:
+            end_call = timestamp
             break
-
-        time.sleep(1)
-    if verbose:
-        print("getting results")
-    #results = [f.result(throw_except=False) for f in futures]
-    results = promess.getResult()
-    if verbose:
-        print("getting status")
-    run_statuses = [f.run_status for f in futures]
-    invoke_statuses = [f.invoke_status for f in futures]
-
-    all_done = time.time()
-    total_time = all_done - t1
-    print("total time", total_time)
-    est_flop = result_count * 2 * loopcount * matn ** 3
-
-    print(est_flop / 1e9 / total_time, "GFLOPS")
-    res = {'total_time': total_time,
-           'est_flop': est_flop,
-           'run_statuses': run_statuses,
-           'invoke_statuses': invoke_statuses,
-           'callset_id': futures[0].callset_id,
-           'local_jobs_done_timeline': local_jobs_done_timeline,
-           'results': results}
-    return res
+    data_dict["start_call"].append(start_call-start_time)
+    data_dict["start_compute"].append(start_compute-start_time)
+    data_dict["end_compute"].append(end_compute-start_time)
+    data_dict["FLOPS"].append(flops)
+    data_dict["end_call"].append(end_call-start_time)
 
 
-def results_to_dataframe(benchmark_data):
-    callset_id = benchmark_data['callset_id']
-
-    func_df = pd.DataFrame(benchmark_data['results']).rename(columns={'flops': 'intra_func_flops'})
-    statuses_df = pd.DataFrame(benchmark_data['run_statuses'])
-    invoke_df = pd.DataFrame(benchmark_data['invoke_statuses'])
-
-    est_total_flops = benchmark_data['est_flop'] / benchmark_data['workers']
-    results_df = pd.concat([statuses_df, invoke_df, func_df], axis=1)
-    Cols = list(results_df.columns)
-    for i, item in enumerate(results_df.columns):
-        if item in results_df.columns[:i]: Cols[i] = "toDROP"
-    results_df.columns = Cols
-    results_df = results_df.drop("toDROP", 1)
-    results_df['workers'] = benchmark_data['workers']
-    results_df['loopcount'] = benchmark_data['loopcount']
-    results_df['MATN'] = benchmark_data['MATN']
-    results_df['est_flops'] = est_total_flops
-    return results_df
-
-
-@click.command()
-@click.option('--workers', default=10, help='how many workers', type=int)
-@click.option('--outfile', default='flops_benchmark.pickle',
-              help='filename to save results in')
-@click.option('--loopcount', default=6, help='Number of matmuls to do.', type=int)
-@click.option('--matn', default=1024, help='size of matrix', type=int)
-def run_benchmark(workers, outfile, loopcount, matn):
-    res = benchmark(loopcount, workers, matn)
-    res['loopcount'] = loopcount
-    res['workers'] = workers
-    res['MATN'] = matn
-
-    pickle.dump(res, open(outfile, 'wb'), -1)
-
-
-if __name__ == "__main__":
-run_benchmark()
+dataFrame = pd.DataFrame(data_dict)
+pickle.dump(dataFrame, open("data.pickle", "wb"))
