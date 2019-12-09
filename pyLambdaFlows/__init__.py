@@ -1,6 +1,7 @@
 from .dispenser import *
 from .op import *
 from .session import *
+from .error import *
 from .tree import *
 from .upload import *
 from .DynamoGesture import *
