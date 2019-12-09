@@ -1,7 +1,7 @@
 from .dispenser import *
 from .session import get_default_session, set_default_session, Session
 from .tree import *
-from .utils import isIterable
+from .utils import isIterable, PromessResult
 from .upload import Uploader
 import os 
 import progressbar
@@ -12,14 +12,26 @@ import pickle
 import traceback
 
 class pyLambdaElement:
+    """An abstract class that describe a pyLambdaFlow element.
+
+    This abstract class shall implement _send method.
+    """
     def _send(self, uploader, purge=False):
+        """ Visitor method to upload this operator and it childrens with uploader object.
+
+        :param Uploader uploader: Uploader instance to use
+        """
         raise NotImplementedError()
 
-    def _generate(self, tree, feed_dict=None):
-        raise NotImplementedError()
 
 class Source(pyLambdaElement):
+    """ This pyLambdaElement is a data source point.
+    
+    It makes you able to provide data on your computing graph. 
+    """
     def __init__(self):
+        """ Default constructor.
+        """
         self.parent = None
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.func_path = os.path.join(os.path.join(dir_path, "external"),"source.py")
@@ -30,14 +42,14 @@ class Source(pyLambdaElement):
         uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
 
-    def _generate(self, tree, feed_dict=None):
-        if feed_dict is None or feed_dict.get(self, None) is None:
-            raise RuntimeError("Missing feed_dict values")
-        tree.putRoot(self.aws_lambda_name, feed_dict[self])
-
 
 
 class Operation(pyLambdaElement):
+    """The basic pyLambdaElement op.
+    
+    Operation is a generic operator using a topologie function and a parent operator.
+    This class needs a topologie method to create dependancies with the parent node.
+    """
     def __init__(self, parent, funct, topologie, name=None):
         if isIterable(parent):
             if len(list(filter(lambda x : isinstance(x, pyLambdaElement), parent)))!=len(parent):
@@ -92,7 +104,7 @@ class Operation(pyLambdaElement):
         uploader.sess.add_func_to_purge(self.aws_lambda_name)
 
 
-    def eval(self, feed_dict=None, sess=None):
+    def eval(self, feed_dict=None, sess=None, wait=True):
         " Call this operation (generate the json data)"
 
         if sess is None:
@@ -112,7 +124,6 @@ class Operation(pyLambdaElement):
 
         # Create input json
         input_json = tree.generateJson(tableName="pyLambda")
-        #return input_json
         # Launch 
         print("Call AWS API")
         lambda_client = sess.getLambda()
@@ -125,7 +136,10 @@ class Operation(pyLambdaElement):
                     Payload=json.dumps(request),
                 )
             Thread(target=lol).start()
+        return input_json
 
+        if not wait:
+            return PromessResult("pyLambda", tree.getResultIdx(), sess)
         print("Computation got started ! ")
         res = None
         for i in progressbar.progressbar(range(0,tree.max_idx)):
@@ -153,10 +167,6 @@ class Operation(pyLambdaElement):
 
         return res
 
-    def _generate(self, tree, feed_dict=None):
-        self.parent._generate(tree, feed_dict=feed_dict)
-        tree.addLayer(self.aws_lambda_name, self.dispenser, name=self.name)
-    
     def __str__(self):
         return "<{} op, funct: {}, name: {}>".format(self.__class__.__name__, self.funct, self.name)
 

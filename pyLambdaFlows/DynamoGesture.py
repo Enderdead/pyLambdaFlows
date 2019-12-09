@@ -206,6 +206,21 @@ def put_entry(table_name, idx, data, remaining, sess=None):
     })
 
 
+def get_entries(table_name, bottom, top, sess=None):
+    if sess is None:
+        sess = get_default_session()
+    if sess is None:
+        raise NoSessionGiven()
+
+    json_dict = {table_name : {'Keys' : [ {"id": element} for element in range(bottom, top+1)]}}
+
+    client = sess.getDynamoDbRessource()
+    res = client.batch_get_item(RequestItems=json_dict)["Responses"]["pyLambda"]
+    
+    parsed_res = [(int(element["id"]), pickle.loads(element["data"].value), int(element["remaining"])) for element in res]
+
+    return list(sorted(parsed_res, key=lambda element : element[0]))
+
 def get_entry(table_name, idx, sess=None):
     """Return the entry according to dynamodb table name and index entry.
 

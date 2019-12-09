@@ -130,6 +130,8 @@ class Tree():
                     result[element.idx] = len(element.parents)
         return result
         
+    def getResultIdx(self):
+        return [ element.idx for element in self.treated[self.target] ]
 
 class InstanceNode():
     def __init__(self, funct, args, idx, parents=None):
