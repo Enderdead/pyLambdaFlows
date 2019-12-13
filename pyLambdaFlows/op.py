@@ -124,6 +124,7 @@ class Operation(pyLambdaElement):
         # Create dynamobd
         if not table_exists("pyLambda",sess):
             create_table("pyLambda",sess)
+        print(tree.gen_counter_values())
         fill_table("pyLambda", tree.gen_counter_values(), sess)
         put_entry("pyLambda", -1, [], 0, sess)
 
@@ -165,11 +166,13 @@ class Operation(pyLambdaElement):
                       'Distant traceback :\n' +
                       '{0}' +
                       '{1}: {2}''').format(''.join(traceback.format_list(tb)), etype.__name__, str(value))
-            
-                raise etype(output)
+                try:
+                    raise etype(output)
+                except:
+                    raise Exception(output)
                 
-
-        return res
+        table_data =  get_entries("pyLambda", min(tree.getResultIdx()), max(tree.getResultIdx()), sess=sess)
+        return [element[1] for element in table_data]
 
     def __str__(self):
         return "<{} op, funct: {}, name: {}>".format(self.__class__.__name__, self.funct, self.name)

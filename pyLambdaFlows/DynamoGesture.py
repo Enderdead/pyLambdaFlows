@@ -175,11 +175,14 @@ def fill_table(table_name, counter_init, sess=None):
 
     client = sess.getDynamoDb()
     for idx, init_val in enumerate(counter_init):
-        client.put_item(TableName=table_name, Item={
+        res = client.put_item(TableName=table_name, Item={
             "id" : {"N" : str(idx)},
             "remaining" : { "N" : str(init_val)},
             "data" : { "B" : pickle.dumps(None) }
-        })
+        },
+        ReturnConsumedCapacity="TOTAL")
+        print(res)
+        
 
 def put_entry(table_name, idx, data, remaining, sess=None):
     """Update one entry on the `table_name` table.
@@ -212,11 +215,13 @@ def get_entries(table_name, bottom, top, sess=None):
     if sess is None:
         raise NoSessionGiven()
 
-    json_dict = {table_name : {'Keys' : [ {"id": element} for element in range(bottom, top+1)]}}
+    json_dict = {table_name : {'Keys' : [ {"id": element} for element in range(bottom, top+1)],
+                               'ConsistentRead' : True}}
 
     client = sess.getDynamoDbRessource()
+    print(json_dict)
     res = client.batch_get_item(RequestItems=json_dict)["Responses"]["pyLambda"]
-    
+    print(len(res))
     parsed_res = [(int(element["id"]), pickle.loads(element["data"].value), int(element["remaining"])) for element in res]
 
     return list(sorted(parsed_res, key=lambda element : element[0]))

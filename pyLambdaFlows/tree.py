@@ -127,7 +127,7 @@ class Tree():
         for elements_list in self.treated.values():
             for element in elements_list:
                 if not element.parents is None :
-                    result[element.idx] = len(element.parents)
+                    result[element.idx] = len(set(element.parents))
         return result
         
     def getResultIdx(self):

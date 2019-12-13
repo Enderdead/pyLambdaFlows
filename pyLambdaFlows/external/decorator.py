@@ -94,8 +94,18 @@ def kernel(func):
             }   
         #post traitement
         # Store
-        put_data(dynamoDbRessource, dynamodb_table, idx, result)
-
+        try:
+            put_data(dynamoDbRessource, dynamodb_table, idx, result)
+        except Exception:
+            etype, value, tb = sys.exc_info()
+            error_list = get_entry(dynamoDbClient, dynamodb_table, -1)[-1]
+            error_list.append( (idx, etype, value, traceback.extract_tb(tb)))
+            put_entry(dynamoDbClient, dynamodb_table, -1, error_list, 1)
+            return {
+                'statusCode': 200,
+                'body': json.dumps("Ok")
+            }  
+            
         if(get_entry(dynamoDbClient, dynamodb_table, -1)[1] != 0):
             return {
                 'statusCode': 200,
