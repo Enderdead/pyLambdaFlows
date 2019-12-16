@@ -2,12 +2,13 @@ import pickle
 import matplotlib.pyplot as plt
 import pandas as pd 
 import numpy as np
-N_TIME = 10000
-
+from multiprocessing import Process
+N_TIME = 2000
+JOBS = 4
 dataFrame = pd.read_csv("./data.csv",index_col=0)
 
 
-max_time = dataFrame.max()["end_call"]+10
+max_time = dataFrame.max()["end_call"]+1
 
 
 xs = np.linspace(0,max_time, num=N_TIME)
@@ -18,6 +19,7 @@ FLOP_per_instance =  dataFrame.iloc[0]["FLOPS"]
 
 peaks_Gflops = np.zeros_like(xs)
 effective_Gflops = np.zeros_like(xs)
+
 
 
 for idx, x in enumerate(xs):

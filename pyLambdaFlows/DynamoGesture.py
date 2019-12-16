@@ -209,22 +209,28 @@ def put_entry(table_name, idx, data, remaining, sess=None):
     })
 
 
-def get_entries(table_name, bottom, top, sess=None):
+def get_entries_group(table_name, bottom, top, sess=None):
+    return get_entries_list(table_name, list(range(bottom, top+1)), sess=sess)
+
+
+def get_entries_list(table_name, idx_list, sess=None):
     if sess is None:
         sess = get_default_session()
     if sess is None:
         raise NoSessionGiven()
+    result = list()
+    while len(idx_list)>40:
+        result.extend(get_entries_list(table_name, idx_list[:40], sess=sess))
+        idx_list = idx_list[40:]
 
-    json_dict = {table_name : {'Keys' : [ {"id": element} for element in range(bottom, top+1)],
+    json_dict = {table_name : {'Keys' : [ {"id": element} for element in idx_list],
                                'ConsistentRead' : True}}
 
     client = sess.getDynamoDbRessource()
-    print(json_dict)
     res = client.batch_get_item(RequestItems=json_dict)["Responses"]["pyLambda"]
-    print(len(res))
     parsed_res = [(int(element["id"]), pickle.loads(element["data"].value), int(element["remaining"])) for element in res]
-
-    return list(sorted(parsed_res, key=lambda element : element[0]))
+    result.extend(parsed_res)
+    return list(sorted(result, key=lambda element : element[0]))
 
 def get_entry(table_name, idx, sess=None):
     """Return the entry according to dynamodb table name and index entry.

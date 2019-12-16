@@ -2,6 +2,9 @@ import time
 from pyLambdaFlows.decorator import kernel
 from random import random
 import copy
+
+NB_REDO = 400
+
 @kernel
 def lambda_handler(conv_map):
     left, mid, right = conv_map
@@ -18,35 +21,37 @@ def lambda_handler(conv_map):
     result = copy.deepcopy(mid)
 
     t1 = time.time()
+    FLOPS = 0
     if len(result)==1:
-        for index in range(1,len(result[0])-1):
-            result[0][index] = ((mid[0][index-1] + mid[0][index] + mid[0][index+1]) + 
-                        (left[index-1] + left[index] + left[index+1]) + 
-                        (right[index-1] + right[index] + right[index+1]))/9
-        FLOPS = (len(result[0])-2)*10
-    elif len(result)>1:
-        FLOPS = 0
-        #Left side
-        for index in range(1,len(result[0])-1):
-            result[0][index] = ((mid[0][index-1] + mid[0][index] + mid[0][index+1]) + 
-                        (left[index-1] + left[index] + left[index+1]) + 
-                        (mid[1][index-1] + mid[1][index] + mid[1][index+1]))/9
-        FLOPS += (len(result[0])-2)*10 
-        #Right side
-        for index in range(1,len(result[0])-1):
-            result[-1][index] = ((mid[-1][index-1] + mid[-1][index] + mid[-1][index+1]) + 
-                        (mid[-2][index-1] + mid[-2][index] + mid[-2][index+1]) + 
-                        (right[index-1] + right[index] + right[index+1]))/9
-        FLOPS += (len(result[0])-2)*10 
-
-        #Center
-        for row_idx in range(1, len(result)-1):
+        for _ in range(NB_REDO):
             for index in range(1,len(result[0])-1):
-                result[row_idx][index] = ((mid[row_idx][index-1] + mid[row_idx][index] + mid[row_idx][index+1]) + 
-                            (mid[row_idx-1][index-1] + mid[row_idx-1][index] + mid[row_idx-1][index+1]) + 
-                            (mid[row_idx+1][index-1] + mid[row_idx+1][index] + mid[row_idx+1][index+1]))/9
-
+                result[0][index] = ((mid[0][index-1] + mid[0][index] + mid[0][index+1]) + 
+                            (left[index-1] + left[index] + left[index+1]) + 
+                            (right[index-1] + right[index] + right[index+1]))/9
+            FLOPS += (len(result[0])-2)*10
+    elif len(result)>1:
+        for _ in range(NB_REDO):
+            #Left side
+            for index in range(1,len(result[0])-1):
+                result[0][index] = ((mid[0][index-1] + mid[0][index] + mid[0][index+1]) + 
+                            (left[index-1] + left[index] + left[index+1]) + 
+                            (mid[1][index-1] + mid[1][index] + mid[1][index+1]))/9
             FLOPS += (len(result[0])-2)*10 
+            #Right side
+            for index in range(1,len(result[0])-1):
+                result[-1][index] = ((mid[-1][index-1] + mid[-1][index] + mid[-1][index+1]) + 
+                            (mid[-2][index-1] + mid[-2][index] + mid[-2][index+1]) + 
+                            (right[index-1] + right[index] + right[index+1]))/9
+            FLOPS += (len(result[0])-2)*10 
+
+            #Center
+            for row_idx in range(1, len(result)-1):
+                for index in range(1,len(result[0])-1):
+                    result[row_idx][index] = ((mid[row_idx][index-1] + mid[row_idx][index] + mid[row_idx][index+1]) + 
+                                (mid[row_idx-1][index-1] + mid[row_idx-1][index] + mid[row_idx-1][index+1]) + 
+                                (mid[row_idx+1][index-1] + mid[row_idx+1][index] + mid[row_idx+1][index+1]))/9
+
+                FLOPS += (len(result[0])-2)*10 
 
     else:
         raise RuntimeError("Bad grid format")

@@ -3,10 +3,14 @@ from conv_op import ConvOp
 import time
 import pandas as pd
 
-NB_IT = 1
-SIZE = 402
+
+#
+
+NB_IT = 6
+SIZE = 202
 MAX = 1.
-GATHERING = 100
+GATHERING = 2
+
 # 100 - it 3
 # 5 - 202 - 10
 DATA = [[0 for _ in range(SIZE)] for _ in range(SIZE)]
@@ -60,7 +64,7 @@ while result_count<NB_KERNEL*NB_IT:
     if old!=result_count:
         local_jobs_done_timeline.append((time.time(), result_idx))
         old = result_count
-    time.sleep(0.3)
+    time.sleep(1)
 
 
 result = promess.getResult()
