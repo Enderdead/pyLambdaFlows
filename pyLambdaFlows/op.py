@@ -171,7 +171,7 @@ class Operation(pyLambdaElement):
                 except:
                     raise Exception(output)
                 
-        table_data =  get_entries("pyLambda", min(tree.getResultIdx()), max(tree.getResultIdx()), sess=sess)
+        table_data =  get_entries_group("pyLambda", min(tree.getResultIdx()), max(tree.getResultIdx()), sess=sess)
         return [element[1] for element in table_data]
 
     def __str__(self):
