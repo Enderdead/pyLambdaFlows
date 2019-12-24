@@ -19,6 +19,7 @@ API
    :maxdepth: 1
 
     Operator <Operator.rst>
+    Dynamodb <DynamoDb.rst>
     Session <Session.rst>
 
 

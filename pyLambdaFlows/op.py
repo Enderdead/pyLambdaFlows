@@ -11,6 +11,11 @@ from threading import Thread
 import pickle
 import traceback
 
+"""
+If you want to create your own pyLambdaOperator, please go check the documentation guide. 
+"""
+
+
 class pyLambdaElement:
     """An abstract class that describe a pyLambdaFlow element.
 
@@ -83,7 +88,10 @@ class Operation(pyLambdaElement):
         self.name = name
 
     def compile(self, sess=None, purge=False):
-        " This function send this lambda op in AWS service"
+        """This function send this lambda op to AWS service.
+        
+        This function will send it own function to AWS but also all the dependancies one.
+        You have to call this method before the eval one !"""
         if sess is None:
             sess = get_default_session(check_if_none=True)
         else:
@@ -99,7 +107,7 @@ class Operation(pyLambdaElement):
             
     def _send(self, uploader, purge=False):
         """
-            send source code 
+            send source code. (intern method)
         """
         for par in self.parent:
             par._send(uploader, purge=purge)
@@ -110,7 +118,18 @@ class Operation(pyLambdaElement):
 
 
     def eval(self, feed_dict=None, sess=None, wait=True):
-        " Call this operation (generate the json data)"
+        """Call this method to compute the result throw the computing graph.
+        
+        In order to use this function, you have to provide all Source operator default values.
+        To do that, you just have use the kwarg feed_dict as follow : 
+        
+        Example : 
+
+        a = Source()
+        b = Map()
+        b.compile()
+        b.eval(feed_dict={a:[1,2,3]})
+        """
 
         if sess is None:
             sess = get_default_session(check_if_none=True)
@@ -124,7 +143,6 @@ class Operation(pyLambdaElement):
         # Create dynamobd
         if not table_exists("pyLambda",sess):
             create_table("pyLambda",sess)
-        print(tree.gen_counter_values())
         fill_table("pyLambda", tree.gen_counter_values(), sess)
         put_entry("pyLambda", -1, [], 0, sess)
 
@@ -179,11 +197,23 @@ class Operation(pyLambdaElement):
 
 
 class Map(Operation):
+    """The common map operator.
+
+    This map operator will apply the given function to all parent elements (one by one),
+    and return the result with the same input size.
+    """
     def __init__(self, parent, funct, name=None):
         super().__init__(parent, funct, DMap(), name=name)
 
 
 class Reduce(Operation):
+    """The common reduce operator.
+
+    This reduce operator will gather all incoming data using the given function.
+    That's means you hate to provide a function able to deal with a dynamic input size.
+
+    You can look at the example mean.
+    """
     def __init__(self, parent, funct, name=None):
         super().__init__(parent, funct, DHardReduce(), name=name)
 

@@ -210,10 +210,27 @@ def put_entry(table_name, idx, data, remaining, sess=None):
 
 
 def get_entries_group(table_name, bottom, top, sess=None):
+    """Return the entries according to the given dynamodb table and the index interval.
+
+    This function provide the actual values from the bottom idx to the upper one. 
+    If you specified bottom = 1 and top=4, this function will return the following indexes :
+    1, 2, 3, 4.
+
+    :param str table_name: Dynamodb table name to use.
+    :param int bottom: Lower index to return.
+    :param int top: Upper index to return. 
+    """
     return get_entries_list(table_name, list(range(bottom, top+1)), sess=sess)
 
 
 def get_entries_list(table_name, idx_list, sess=None):
+    """Return the entries according to the given dynamodb table and the index list.
+
+    This function provide the actual values specified on the idx list. 
+
+    :param str table_name: Dynamodb table name to use.
+    :param list idx_list: Index list to deal with (int list).
+    """
     if sess is None:
         sess = get_default_session()
     if sess is None:
@@ -235,7 +252,7 @@ def get_entries_list(table_name, idx_list, sess=None):
 def get_entry(table_name, idx, sess=None):
     """Return the entry according to dynamodb table name and index entry.
 
-    This function provide the accual value of the specidied entry (according 
+    This function provide the actual value of the specified entry (according 
     to the dynamodb table name).
 
     :param str table_name: Dynamodb name to use.

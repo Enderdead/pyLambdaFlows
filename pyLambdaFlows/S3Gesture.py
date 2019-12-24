@@ -1,8 +1,14 @@
 import botocore
 
+
+"""
+Disclaimer, the S3 isn't use yet but it is able to replace dynamodb.
+Be aware that S3 is far away more expensive due to the write restriction.
+"""
+
 def create_bucket(name, max_idx, sess):
     """
-    Create a specific bucket or reset if already exists
+    Create a specific bucket or reset if it already exists.
     """
     location = {'LocationConstraint': sess.region}
     S3Client = sess.getS3()
