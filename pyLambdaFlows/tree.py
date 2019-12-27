@@ -4,7 +4,19 @@ from .utils import isIterable
 
 
 class Tree():
+    """Intern class to create json from input data and computing graph.
+
+    This class is for an intern purpose. It create a lambda instantiation
+    graph with all dependancies in order to create the final json for AWS API call.
+    """
     def __init__(self, target):
+        """Default constructor.
+
+        This constructor requires a target pyLambdaflow node to deal with.
+        This node will be concidered as the leaf node.
+
+        :param pyLambdaFlows.Operation target: The node that will be treated.
+        """
         self.depth = 0 
         self.max_idx = 0
         self.target = target
@@ -16,14 +28,33 @@ class Tree():
         self.treated = dict()
 
     def compute(self, feed_dict):
+        """Intern method to create the dependancies graph with a feed dict.
+
+        This method applies a BFS on the computing graph in order to figure out the 
+        lambda instantiation number per OP. 
+        
+        :param dict feed_dict: A dict with all datas. PyLambdaFlow as key and list as value.
+        :raises: RuntimeError: If missing values on the feed_dict.
+        """
         self.aws_functions = set()
         self.bottoms = list()
         self.treated = dict()
         self.curr_idx = 0
-        self.dfs(self.target, feed_dict)
+        self._dfs(self.target, feed_dict)
         self.max_idx = self.curr_idx
 
-    def dfs(self, node, feed_dict):
+    def _dfs(self, node, feed_dict):
+        """Intern dfs recursive method.
+
+        This method is for intern purpose only. It go through all the given computing
+        graph in order to determine the lambda instantiation number per layer. 
+        Firstly, this method go into the deepiest elements on the graph and rollout 
+        and calculate at eatch step the lambda instance required using the dispenser 
+        op function.
+
+        :param node: Recursive method.
+        :param dict feed_dict: Data dictionnary.
+        """
         if node.parent is None:
             # We are in a leaf
             if not node in feed_dict:
@@ -38,7 +69,7 @@ class Tree():
 
         for parent in node.parent:
             if not parent in self.treated: 
-                self.dfs(parent, feed_dict)
+                self._dfs(parent, feed_dict)
         
         dependencies = list()
         for idx, parent in enumerate(node.parent):
@@ -75,12 +106,25 @@ class Tree():
         self.treated[node] = lambda_list
 
     def getNode(self, idx):
+        """Return the associeted function to the given index.
+
+        :return: The associeted pyLambdaflow operator.
+        """
         for key, items in self.treated.items():
             if len(list(filter(lambda x: x.idx==int(idx), items)))>0:
                 return key
         return None
 
     def generateJson(self, tableName="None"):
+        """Generate the request json.
+
+        This function compute the json with all children dependancies
+        using a BFS algorithm and the precomputed lambda instance
+        graph (compute method).
+
+        :param tableName:
+        :return: the json 
+        """
         jsonData = dict()
 
         BFS_queue = [self.target]
@@ -123,11 +167,17 @@ class Tree():
         return jsonData
 
     def gen_counter_values(self):
+        """Return the parent number of each lambda instance.
+
+        This method compute the parents number for each lambda instance using the 
+        precomputed graph representation.
+
+        :return: A list containing the parent number for the specific list index.
+        """
         result = [0,]*self.curr_idx
         for elements_list in self.treated.values():
             for element in elements_list:
                 if not element.parents is None :
-                    print(element.parents)
                     if isIterable(element.parents[0]):
                         result[element.idx] = 0
                         for sub_parents in element.parents:
@@ -137,7 +187,13 @@ class Tree():
         return result
         
     def getResultIdx(self):
+        """Return all lambda index associeted to the target op.
+        
+        :return: List of index associeted to the final op.
+        """
         return [ element.idx for element in self.treated[self.target] ]
+
+
 
 class InstanceNode():
     def __init__(self, funct, args, idx, parents=None):

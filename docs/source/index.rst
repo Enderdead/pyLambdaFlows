@@ -8,18 +8,24 @@ Welcome to pyLambdaFlows's documentation!
 
 PyLambdaFlows lets you run your program on AWS Lambda for a large scale execution. It make you able to easily use AWS service without major alteration on your code. Moreover, you can define very complexe dependancies between your step and create your own dependancie function ! 
 
-Tutorials
--------------------------
 
-TODO
 
-API
--------------------------
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Guide
+
+    Get started <GetStarted.rst>
+    Create your operator <CreateYourOwnOperator.rst>
+
+
+
+
 .. toctree::
    :maxdepth: 1
+   :caption: API
 
     Operator <Operator.rst>
     Dynamodb <DynamoDb.rst>
     Session <Session.rst>
-
-
+    Dispenser <Dispenser.rst>

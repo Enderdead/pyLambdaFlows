@@ -1,16 +1,21 @@
 class Dispenser():
-    """This class will explain data dependancies over two layers
+    """This class will explain data dependancies over two layers.
     
     For instance, if you have 3 lambda instance incoming, pylambdaflow will 
     use a dispenser class in order create the dependency graph.
 
     distribute(3) -> [[0,1], [2]]
-    In this example the dependency graph will be like :
-    X1----N1
-          |
-    X2----+
 
-    X3----N2
+    In this example the dependency graph will be like :
+
+    .. code-block:: none
+        
+        X1----N1
+              |
+        X2----+
+
+        X3----N2
+
     with Xn the previous op and N the new one.
     """
     def distribute(self, size):
@@ -25,13 +30,11 @@ class Dispenser():
 
 
 class DHardReduce(Dispenser):
-    """Reduce dispenser that produce only one instance with all inputs.
-    """
+    "Reduce dispenser that produce only one instance with all inputs."
     def distribute(self, size):
         return [list(range(size)),]
 
 class DMap(Dispenser):
-    """Map dispenser that create one lambda per previous instance.
-    """
+    "Map dispenser that create one lambda per previous instance."
     def distribute(self, size):
         return [ [i,] for i in range(size) ]

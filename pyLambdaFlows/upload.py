@@ -44,7 +44,6 @@ class Uploader:
             return self.already_pushed[op]
         
         funct_path = op.funct
-        print(op.files)
         try:
             if os.path.basename(funct_path).split('.')[-1] != "py":
                 raise RuntimeError("Your funct path must be a .py file")
@@ -55,8 +54,7 @@ class Uploader:
 
         
         f = tempfile.TemporaryFile()
-        #if len(op.files)!=1:
-        #    f = open("test.zip", "wb")
+
         with zipfile.ZipFile (f, "a", compression=zipfile.ZIP_DEFLATED) as zipObj:
             for element in op.files:
                 if not os.path.exists(element):

@@ -125,10 +125,12 @@ class Operation(pyLambdaElement):
         
         Example : 
 
-        a = Source()
-        b = Map()
-        b.compile()
-        b.eval(feed_dict={a:[1,2,3]})
+        .. code-block:: Python
+        
+            a = Source()
+            b = Map(a)
+            b.compile()
+            b.eval(feed_dict={a:[1,2,3]})
         """
 
         if sess is None:
