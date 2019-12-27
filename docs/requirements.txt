@@ -2,6 +2,5 @@ pandas
 numpy
 botocore
 boto3
-progressbar2
-zipfile
 sphinx_rtd_theme
+progressbar2

@@ -4,10 +4,11 @@ on: [push]
 
 
 jobs:
-  build:
-
+  docs:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Sphinx Build
-      uses: ammaraskar/sphinx-action@0.3
+    - uses: actions/checkout@v1
+    - uses: ammaraskar/sphinx-action@0.3
+      with:
+        docs-folder: "docs/"
+        build-command: "sphinx-build source build"
