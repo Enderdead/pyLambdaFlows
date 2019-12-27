@@ -5,10 +5,14 @@ This project was inspired by *[PyWren](https://github.com/pywren/pywren)* librar
 In order to create a lambda gesture, pylambdaFlow use dynamodb.
 
 ## Table of Contents
+-   [Documentation](https://github.com/Enderdead/pyLambdaFlows#docs) : This section contains some ways to get few docs.
 -   [Examples](https://github.com/Enderdead/pyLambdaFlows#examples) :  This section will describe you how can you use pyLambdaFlows.
 -   [Installation](https://github.com/Enderdead/pyLambdaFlows#installation) : This section will explain you how can you install this library
 -   [Features](https://github.com/Enderdead/pyLambdaFlows#features) : This section will explain you shorlty all available features on pylambdalflows (graph computing, custom op, and so on).
 -   [AWS setup](https://github.com/Enderdead/pyLambdaFlows#aws-setup) : This section will show you how can you correctly setup your AWS credentials to be ready to go !
+
+## Documentation
+You can either find out the documentation [here at readthedocs](https://pylambdaflows.readthedocs.io/en/latest/index.html) or generate your own using the provided makefile or just read through the source code ;-).
 
 ## Examples
 Firsly you have to split your code into kernel file. One file kernel per operation is the common way to work with. 
