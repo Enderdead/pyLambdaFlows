@@ -1,4 +1,6 @@
 # PyLambdaFlows
+[![Documentation Status](https://readthedocs.org/projects/pylambdaflows/badge/?version=latest)](https://pylambdaflows.readthedocs.io/en/latest/?badge=latest)
+
 PyLambdaFlows lets you run your program on AWS Lambda for a large scale execution. It make you able to easily use AWS service without major alteration on your code. Moreover, you can define very complexe dependancies between your step and create your own dependancie function ! 
 This project was inspired by *[PyWren](https://github.com/pywren/pywren)* library.   
 
