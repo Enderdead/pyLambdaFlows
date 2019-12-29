@@ -4,7 +4,7 @@ from .utils import isIterable
 
 
 class Tree():
-    """Intern class to create json from input data and computing graph.
+    """Intern class to create json from input data and computational graph.
 
     This class is for an intern purpose. It create a lambda instantiation
     graph with all dependancies in order to create the final json for AWS API call.
@@ -30,7 +30,7 @@ class Tree():
     def compute(self, feed_dict):
         """Intern method to create the dependancies graph with a feed dict.
 
-        This method applies a BFS on the computing graph in order to figure out the 
+        This method applies a BFS on the computational graph in order to figure out the 
         lambda instantiation number per OP. 
         
         :param dict feed_dict: A dict with all datas. PyLambdaFlow as key and list as value.

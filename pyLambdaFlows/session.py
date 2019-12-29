@@ -25,7 +25,7 @@ def get_default_session(check_if_none=False):
 class Session():
     """
     This class is used to load and share credentials to all pyLambdaFlow ressources.
-    You must instantiate this class first before send or eval a computing graph. Please go take a look
+    You must instantiate this class first before send or eval a computational graph. Please go take a look
     at the given example.
     You can deal with more than one Session but the default way to give Session isn't relevant in this case.
     """
