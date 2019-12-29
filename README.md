@@ -1,4 +1,6 @@
 # PyLambdaFlows
+[![Documentation Status](https://readthedocs.org/projects/pylambdaflows/badge/?version=latest)](https://pylambdaflows.readthedocs.io/en/latest/?badge=latest)
+
 PyLambdaFlows lets you run your program on AWS Lambda for a large scale execution. It make you able to easily use AWS service without major alteration on your code. Moreover, you can define very complexe dependancies between your step and create your own dependancie function ! 
 This project was inspired by *[PyWren](https://github.com/pywren/pywren)* library.   
 
@@ -8,7 +10,7 @@ In order to create a lambda gesture, pylambdaFlow use dynamodb.
 -   [Documentation](https://github.com/Enderdead/pyLambdaFlows#docs) : This section contains some ways to get few docs.
 -   [Examples](https://github.com/Enderdead/pyLambdaFlows#examples) :  This section will describe you how can you use pyLambdaFlows.
 -   [Installation](https://github.com/Enderdead/pyLambdaFlows#installation) : This section will explain you how can you install this library
--   [Features](https://github.com/Enderdead/pyLambdaFlows#features) : This section will explain you shorlty all available features on pylambdalflows (graph computing, custom op, and so on).
+-   [Features](https://github.com/Enderdead/pyLambdaFlows#features) : This section will explain you shorlty all available features on pylambdalflows (computational graph, custom op, and so on).
 -   [AWS setup](https://github.com/Enderdead/pyLambdaFlows#aws-setup) : This section will show you how can you correctly setup your AWS credentials to be ready to go !
 
 ## Documentation
