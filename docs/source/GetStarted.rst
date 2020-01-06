@@ -4,7 +4,7 @@ Get started
 
 Installation
 -----------------
-You can easly install this library using the setup.py script.
+You can easily install this library using the setup.py script.
 
 Firstly, you have to clone the `github repo <https://github.com/Enderdead/pyLambdaFlows>`_ .
 Then go to the pyLambdaFlows directory and install all depandancies with this command : 
@@ -25,7 +25,7 @@ IAM setup
 
 In order to be able to send lambda request to AWS API, you have to create an IAM role.
 This role must be named as ``LambdaBasicExecution``.
-You can follow this official guid to create your own.
+You can follow this official guide to create your own.
 
 https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html
 
@@ -34,10 +34,11 @@ https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html
     The ``LambdaBasicExecution`` role must get all lambda permissions.
 
 
-TODO Create AWS user
+In order to generate  valid credentials, you can follow the tutorial bellow that explain you how to create a IAM account :
 
+https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 
-https://aws.amazon.com/fr/premiumsupport/knowledge-center/create-access-key/
+Then you can download your csv credential file, but be aware that this file is provided only once.
 
 Basic example
 --------------------
@@ -64,7 +65,7 @@ A kernel file is a basic python file with some requirements :
         return x*x
 
 This kernel take one element and return the squared value. You have to create one python file per kernel.
-This file will be sended to AWS cloud.
+This file will be sent to AWS cloud.
 
 
 
@@ -84,7 +85,7 @@ We can define an other one that compute a reduce mean. To do that, we can create
         result = mean(inputData)
         return result
 
-Pretty simple code using the statistics library.
+It's a pretty simple code using the statistics library.
 Now we are ready to define the computational graph and evaluate it !
 
 Firstly, we create a source node. A source node is like an input to the computational graph.
